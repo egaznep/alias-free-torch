@@ -1,3 +1,5 @@
+from typing import Callable
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,13 +9,14 @@ from .filter import kaiser_sinc_filter1d, kaiser_sinc_filter2d
 
 class UpSample1d(nn.Module):
 
-    def __init__(self, ratio=2, kernel_size=None):
+    def __init__(self, ratio=2, kernel_size=None, pad: Callable[..., nn.Module] = nn.ReplicationPad1d):
         super().__init__()
         self.ratio = ratio
         self.kernel_size = int(6 * ratio // 2) * 2 if kernel_size is None \
             else kernel_size
         self.stride = ratio
-        self.pad = self.kernel_size // ratio - 1
+        pad = self.kernel_size // ratio - 1
+        self.pad = pad(pad)
         self.pad_left = self.pad * self.stride + (self.kernel_size -
                                              self.stride) // 2
         self.pad_right = self.pad * self.stride + (self.kernel_size - self.stride +
@@ -26,7 +29,7 @@ class UpSample1d(nn.Module):
     # x: [B,C,T]
     def forward(self, x):
         _, C, _ = x.shape
-        x = F.pad(x, (self.pad, self.pad), mode='replicate')
+        x = self.pad(x)
         x = self.ratio * F.conv_transpose1d(
             x, self.filter.expand(C, -1, -1), stride=self.stride, groups=C)
         x = x[..., self.pad_left:-self.pad_right]
