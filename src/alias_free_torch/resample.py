@@ -15,11 +15,11 @@ class UpSample1d(nn.Module):
         self.kernel_size = int(6 * ratio // 2) * 2 if kernel_size is None \
             else kernel_size
         self.stride = ratio
-        pad = self.kernel_size // ratio - 1
-        self.pad = pad(pad)
-        self.pad_left = self.pad * self.stride + (self.kernel_size -
+        padding = self.kernel_size // ratio - 1
+        self.pad = pad(padding)
+        self.pad_left = padding * self.stride + (self.kernel_size -
                                              self.stride) // 2
-        self.pad_right = self.pad * self.stride + (self.kernel_size - self.stride +
+        self.pad_right = padding * self.stride + (self.kernel_size - self.stride +
                                               1) // 2
         filter = kaiser_sinc_filter1d(cutoff=0.5 / ratio,
                                       half_width=0.6 / ratio,
